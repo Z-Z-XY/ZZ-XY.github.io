@@ -3,330 +3,450 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>站点披萨 · 一键生成小红书</title>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+SC:wght@400;700;900&display=swap" rel="stylesheet">
+    <title>小红书笔记预览</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            font-family: 'Noto Sans SC', sans-serif;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d1f1f 100%);
-            color: white;
-            min-height: 100vh;
-            padding: 1rem;
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f5f5f5;
+            color: #333;
         }
 
-        .container {
-            max-width: 500px;
-            margin: 0 auto;
+        /* 小红书风格顶部栏 */
+        .xhs-header {
+            background: white;
+            padding: 0.8rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #f0f0f0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         }
 
-        .logo {
-            font-family: 'Bebas Neue', cursive;
-            font-size: 2.5rem;
-            color: #ff6b35;
-            text-align: center;
-            margin: 2rem 0 1rem;
-            text-shadow: 3px 3px 0px rgba(0,0,0,0.3);
-            letter-spacing: 2px;
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #666;
+            font-size: 0.9rem;
         }
 
-        .subtitle {
-            text-align: center;
+        .header-title {
             font-size: 1.1rem;
-            margin-bottom: 2rem;
-            opacity: 0.9;
+            font-weight: 600;
+            color: #333;
         }
 
-        .loading-screen {
-            text-align: center;
-            padding: 3rem 1rem;
+        .header-right {
+            color: #ff2442;
+            font-weight: 600;
+            font-size: 0.95rem;
         }
 
-        .pizza-icon {
-            font-size: 5rem;
-            animation: rotate 2s linear infinite;
-            margin-bottom: 2rem;
+        /* 加载动画 */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
         }
 
-        @keyframes rotate {
-            from { transform: rotate(0deg); }
+        .loading-icon {
+            width: 50px;
+            height: 50px;
+            border: 3px solid #ff2442;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
             to { transform: rotate(360deg); }
         }
 
         .loading-text {
-            font-size: 1.3rem;
-            margin-bottom: 1rem;
-            color: #ff6b35;
-            font-weight: bold;
-        }
-
-        .loading-steps {
-            opacity: 0.7;
-            line-height: 2.2;
-            font-size: 1.05rem;
-        }
-
-        .loading-steps p {
-            transition: all 0.3s ease;
-        }
-
-        .result-screen {
-            display: none;
-            animation: fadeIn 0.5s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 107, 53, 0.3);
-            border-radius: 20px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .section-title {
-            color: #ffc107;
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .content {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 1.5rem;
-            border-radius: 12px;
-            line-height: 1.8;
-            white-space: pre-wrap;
-            margin-bottom: 1rem;
-            max-height: 400px;
-            overflow-y: auto;
+            color: #666;
             font-size: 0.95rem;
         }
 
-        .content::-webkit-scrollbar {
-            width: 6px;
+        /* 笔记预览容器 */
+        .note-preview {
+            background: white;
+            min-height: calc(100vh - 3.6rem);
         }
 
-        .content::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 3px;
-        }
-
-        .content::-webkit-scrollbar-thumb {
-            background: rgba(255, 107, 53, 0.5);
-            border-radius: 3px;
-        }
-
-        .image-container {
+        /* 图片区域 */
+        .image-section {
             width: 100%;
-            border-radius: 12px;
-            overflow: hidden;
-            margin-bottom: 1rem;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            position: relative;
+            background: #000;
         }
 
-        .image-container img {
+        .preview-image {
             width: 100%;
-            height: auto;
             display: block;
         }
 
-        .action-btns {
+        .image-indicator {
+            position: absolute;
+            bottom: 0.8rem;
+            right: 0.8rem;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+        }
+
+        /* 内容区域 */
+        .content-section {
+            padding: 1rem;
+        }
+
+        .note-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.8rem;
+            line-height: 1.5;
+        }
+
+        .note-content {
+            font-size: 0.95rem;
+            line-height: 1.8;
+            color: #333;
+            white-space: pre-wrap;
+            margin-bottom: 1rem;
+        }
+
+        .note-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .tag {
+            background: #fff1f2;
+            color: #ff2442;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        /* 底部操作栏 */
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 0.8rem 1rem;
+            border-top: 1px solid #f0f0f0;
             display: flex;
             gap: 0.8rem;
-            margin-top: 1rem;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.06);
+            z-index: 100;
         }
 
-        .btn {
+        .btn-secondary {
             flex: 1;
-            padding: 1.1rem;
-            border: none;
-            border-radius: 12px;
-            font-size: 1.05rem;
-            font-weight: bold;
+            padding: 0.9rem;
+            border: 1px solid #ff2442;
+            background: white;
+            color: #ff2442;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            display: flex;
+        }
+
+        .btn-primary {
+            flex: 2;
+            padding: 0.9rem;
+            border: none;
+            background: linear-gradient(135deg, #ff2442 0%, #ff6b9d 100%);
+            color: white;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(255, 36, 66, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        /* 提示弹窗 */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
             align-items: center;
             justify-content: center;
-            gap: 0.5rem;
+            z-index: 9999;
+            animation: fadeIn 0.3s ease;
         }
 
-        .btn-copy {
-            background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
-            color: #1a1a1a;
+        .modal.show {
+            display: flex;
         }
 
-        .btn-share {
-            background: linear-gradient(135deg, #ee4266 0%, #d32f2f 100%);
-            color: white;
-        }
-
-        .btn:active {
-            transform: scale(0.95);
-        }
-
-        .btn-download {
-            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
-            color: white;
-            width: 100%;
-            margin-top: 0.8rem;
-        }
-
-        .tip {
-            background: rgba(255, 193, 7, 0.1);
-            border: 2px solid rgba(255, 193, 7, 0.3);
+        .modal-content {
+            background: white;
             border-radius: 12px;
-            padding: 1rem;
-            margin-top: 1rem;
-            font-size: 0.9rem;
-            line-height: 1.6;
+            padding: 1.5rem;
+            margin: 1rem;
+            max-width: 320px;
+            width: 100%;
+            animation: slideUp 0.3s ease;
         }
 
-        .store-info {
-            text-align: center;
-            background: rgba(255, 107, 53, 0.2);
-            padding: 0.8rem;
-            border-radius: 10px;
-            margin-bottom: 2rem;
-            font-size: 0.95rem;
-            border: 2px solid rgba(255, 107, 53, 0.3);
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
-        .success-icon {
-            font-size: 3rem;
-            text-align: center;
-            margin-bottom: 1rem;
-            animation: bounce 1s ease;
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-20px); }
-            60% { transform: translateY(-10px); }
-        }
-
-        .error-screen {
-            display: none;
-            text-align: center;
-            padding: 2rem 1rem;
-        }
-
-        .error-icon {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-        }
-
-        .error-text {
+        .modal-title {
             font-size: 1.1rem;
-            color: #ee4266;
-            margin-bottom: 1.5rem;
-            line-height: 1.6;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            text-align: center;
         }
 
-        .error-details {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 1rem;
-            border-radius: 10px;
-            margin-bottom: 1.5rem;
-            font-size: 0.9rem;
-            text-align: left;
+        .modal-text {
+            font-size: 0.95rem;
             line-height: 1.8;
+            color: #666;
+            margin-bottom: 1.5rem;
         }
 
-        .retry-btn {
-            background: linear-gradient(135deg, #ff6b35 0%, #d32f2f 100%);
+        .modal-buttons {
+            display: flex;
+            gap: 0.8rem;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 0.8rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .modal-btn-cancel {
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        .modal-btn-confirm {
+            background: #ff2442;
+            color: white;
+        }
+
+        /* 站点披萨标识 */
+        .brand-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            background: linear-gradient(135deg, #d32f2f 0%, #ff6b35 100%);
+            color: white;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 0.8rem;
+        }
+
+        .success-toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.85);
             color: white;
             padding: 1rem 2rem;
-            border: none;
-            border-radius: 12px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            margin: 0.5rem;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            z-index: 10000;
+            display: none;
         }
 
-        @media (max-width: 480px) {
-            .logo { font-size: 2rem; }
-            .action-btns { flex-direction: column; }
+        .success-toast.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* 步骤指引 */
+        .guide-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10001;
+            padding: 2rem;
+            color: white;
+        }
+
+        .guide-overlay.show {
+            display: flex;
+        }
+
+        .guide-content {
+            text-align: center;
+            max-width: 350px;
+        }
+
+        .guide-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .guide-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .guide-steps {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .guide-step {
+            margin-bottom: 1rem;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        .guide-step:last-child {
+            margin-bottom: 0;
+        }
+
+        .guide-btn {
+            background: white;
+            color: #ff2442;
+            padding: 1rem 2.5rem;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="logo">🍕 TUBE STATION</div>
-        <div class="subtitle">站点披萨 · 小红书一键生成</div>
+    <!-- 加载动画 -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-icon"></div>
+        <div class="loading-text">正在生成笔记...</div>
+    </div>
 
-        <!-- 加载界面 -->
-        <div class="loading-screen" id="loadingScreen">
-            <div class="pizza-icon">🍕</div>
-            <div class="loading-text">正在为您生成专属内容...</div>
-            <div class="loading-steps">
-                <p id="step1">⏳ 识别门店位置...</p>
-                <p id="step2">⏳ AI创作文案中...</p>
-                <p id="step3">⏳ 生成精美配图...</p>
-            </div>
+    <!-- 小红书风格预览界面 -->
+    <div class="xhs-header">
+        <div class="header-left">
+            <span onclick="showBackConfirm()">✕</span>
+        </div>
+        <div class="header-title">笔记预览</div>
+        <div class="header-right" onclick="showPublishGuide()">发布</div>
+    </div>
+
+    <div class="note-preview">
+        <!-- 图片区域 -->
+        <div class="image-section">
+            <img id="previewImage" class="preview-image" alt="笔记配图">
+            <div class="image-indicator">1/1</div>
         </div>
 
-        <!-- 结果界面 -->
-        <div class="result-screen" id="resultScreen">
-            <div class="success-icon">✨🎉✨</div>
-            <div class="store-info" id="storeInfo"></div>
+        <!-- 内容区域 -->
+        <div class="content-section">
+            <div class="brand-tag">🍕 站点披萨官方</div>
             
-            <!-- 配图 -->
-            <div class="card">
-                <div class="section-title">📸 小红书配图</div>
-                <div class="image-container" id="imageContainer"></div>
-                <button class="btn btn-download" onclick="downloadImage()">
-                    💾 长按保存图片
-                </button>
-            </div>
-
-            <!-- 文案 -->
-            <div class="card">
-                <div class="section-title">📝 小红书文案</div>
-                <div class="content" id="textContent"></div>
-                <div class="action-btns">
-                    <button class="btn btn-copy" onclick="copyText()">
-                        📋 复制文案
-                    </button>
-                    <button class="btn btn-share" onclick="openXHS()">
-                        📱 打开小红书
-                    </button>
-                </div>
-            </div>
-
-            <div class="tip">
-                💡 <strong>发布步骤：</strong><br>
-                1️⃣ 点击"复制文案"（自动复制到剪贴板）<br>
-                2️⃣ 长按上方图片保存到相册<br>
-                3️⃣ 点击"打开小红书"跳转APP<br>
-                4️⃣ 新建笔记 → 上传图片 → 粘贴文案<br>
-                5️⃣ 发布带话题 <strong>#站点披萨</strong> 有机会获得优惠券 🎁
-            </div>
+            <div class="note-title" id="noteTitle"></div>
+            
+            <div class="note-content" id="noteContent"></div>
+            
+            <div class="note-tags" id="noteTags"></div>
         </div>
 
-        <!-- 错误界面 -->
-        <div class="error-screen" id="errorScreen">
-            <div class="error-icon">😢</div>
-            <div class="error-text" id="errorText"></div>
-            <div class="error-details" id="errorDetails"></div>
-            <button class="retry-btn" onclick="location.reload()">
-                🔄 重新生成
-            </button>
+        <div style="height: 80px;"></div>
+    </div>
+
+    <!-- 底部操作栏 -->
+    <div class="bottom-bar">
+        <button class="btn-secondary" onclick="saveContent()">💾 保存草稿</button>
+        <button class="btn-primary" onclick="showPublishGuide()">📱 去小红书发布</button>
+    </div>
+
+    <!-- 发布指引弹窗 -->
+    <div class="guide-overlay" id="guideOverlay">
+        <div class="guide-content">
+            <div class="guide-icon">📱</div>
+            <div class="guide-title">发布到小红书</div>
+            <div class="guide-steps">
+                <div class="guide-step">1️⃣ 点击"我知道了"打开小红书APP</div>
+                <div class="guide-step">2️⃣ 点击底部 ➕ 号新建笔记</div>
+                <div class="guide-step">3️⃣ 长按保存上方图片并上传</div>
+                <div class="guide-step">4️⃣ 粘贴刚才自动复制的文案</div>
+                <div class="guide-step">5️⃣ 点击发布即可！</div>
+            </div>
+            <button class="guide-btn" onclick="goToXHS()">我知道了</button>
+        </div>
+    </div>
+
+    <!-- 成功提示 -->
+    <div class="success-toast" id="successToast"></div>
+
+    <!-- 返回确认弹窗 -->
+    <div class="modal" id="backModal">
+        <div class="modal-content">
+            <div class="modal-title">确认退出？</div>
+            <div class="modal-text">退出后内容将不会保存</div>
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-cancel" onclick="closeModal()">取消</button>
+                <button class="modal-btn modal-btn-confirm" onclick="goBack()">确认</button>
+            </div>
         </div>
     </div>
 
@@ -335,289 +455,233 @@
         const API_KEY = 'sk-nqgehhnkelwtvlenuqaojxiaebseatshpyifcatufofkljmi';
         const API_URL = 'https://api.siliconflow.cn/v1/chat/completions';
 
-        // 从URL参数获取门店和菜品信息
+        // URL参数
         const urlParams = new URLSearchParams(window.location.search);
         const store = urlParams.get('store') || '站点披萨';
         const pizza = urlParams.get('pizza') || '垃圾桶';
 
-        // 页面加载后自动生成
+        // 全局变量
+        let generatedContent = {
+            title: '',
+            text: '',
+            image: '',
+            tags: []
+        };
+
+        // 页面加载自动生成
         window.onload = function() {
-            // 检测是否是HTTPS或本地文件
             if (window.location.protocol === 'file:') {
-                showError(
-                    '❌ 检测到本地文件模式',
-                    '本工具需要部署到Web服务器才能正常使用。\n\n📝 解决方案：\n\n1. 使用Python快速启动：\n   python3 -m http.server 8080\n   然后访问 http://localhost:8080\n\n2. 或上传到任何Web服务器\n\n3. 也可以使用免费托管：\n   • Vercel (vercel.com)\n   • Netlify (netlify.com)\n   • GitHub Pages'
-                );
+                alert('⚠️ 请部署到Web服务器后使用\n\n运行命令：python3 -m http.server 8080\n然后访问：http://localhost:8080');
                 return;
             }
-            
             autoGenerate();
         };
 
         async function autoGenerate() {
             try {
-                // 步骤1：识别门店
-                updateStep('step1', '✓ 识别门店位置');
-                await sleep(500);
+                // 同时生成文案和图片
+                const [content, imageUrl] = await Promise.all([
+                    generateContent(),
+                    generateImage()
+                ]);
 
-                // 步骤2：生成文案
-                updateStep('step2', '⏳ AI创作文案中...');
-                const text = await generateText();
-                updateStep('step2', '✓ AI创作文案完成');
-                await sleep(400);
+                // 解析内容
+                parseContent(content);
+                generatedContent.image = imageUrl;
 
-                // 步骤3：生成图片
-                updateStep('step3', '⏳ 生成精美配图...');
-                const imageUrl = await generateImage();
-                updateStep('step3', '✓ 生成配图完成');
-                await sleep(400);
+                // 显示预览
+                showPreview();
 
-                // 显示结果
-                showResult(text, imageUrl);
+                // 自动复制文案到剪贴板
+                await copyToClipboard();
+
             } catch (error) {
                 console.error('生成失败:', error);
-                
-                let errorTitle = '生成失败';
-                let errorDetail = '';
-                
-                if (error.message.includes('Failed to fetch') || error.message.includes('fetch')) {
-                    errorTitle = '❌ 网络请求失败';
-                    errorDetail = '可能的原因：\n\n1. 需要HTTPS或本地服务器环境\n2. 网络连接问题\n3. API服务暂时不可用\n\n💡 建议：\n• 确保已部署到Web服务器\n• 检查网络连接\n• 稍后重试';
-                } else if (error.message.includes('API')) {
-                    errorTitle = '❌ API调用失败';
-                    errorDetail = error.message + '\n\n请联系技术人员检查API配置';
-                } else {
-                    errorTitle = '❌ ' + error.message;
-                    errorDetail = '请稍后重试或联系技术支持';
-                }
-                
-                showError(errorTitle, errorDetail);
+                alert('生成失败: ' + error.message + '\n\n请刷新页面重试');
             }
         }
 
-        function updateStep(id, text) {
-            const element = document.getElementById(id);
-            element.innerHTML = text;
-            if (text.startsWith('✓')) {
-                element.style.color = '#4caf50';
-                element.style.fontWeight = 'bold';
-            }
-        }
+        async function generateContent() {
+            const pizzaDesc = {
+                '垃圾桶': '除了三文鱼和BBQ鸡肉，其他所有配料都有！意大利香肠、萨拉米、牛肉、猪肉、培根、火腿、蘑菇、橄榄...满满当当',
+                '加州小牛肉': '满满的牛肉铺在上面，黑胡椒香气扑鼻，牛肉嫩得不行，搭配浓郁芝士',
+                '绞肉机': '各种肉类堆叠，每一口都是肉香四溢，配上浓郁芝士',
+                '夏威夷BBQ': '甜甜的菠萝配BBQ酱，酸甜口感特别开胃',
+                '派对怪兽': '32寸超巨型披萨！站点特色、加州小牛肉、意大利香肠、BBQ鸡肉四合一'
+            }[pizza] || '料超级足，芝士拉丝能拉出一米长';
 
-        async function generateText() {
-            const pizzaDescriptions = {
-                '垃圾桶': '他们家的招牌"垃圾桶披萨"，除了三文鱼和BBQ鸡肉，其他所有配料都在上面！意大利香肠、萨拉米、牛肉、猪肉、培根、火腿、蘑菇、橄榄...满满当当！',
-                '加州小牛肉': '满满的牛肉铺在上面，黑胡椒香气扑鼻而来，牛肉嫩得不行，搭配浓郁的芝士，每一口都是享受！',
-                '绞肉机': '肉食爱好者的天堂！各种肉类堆叠，每一口都是肉香四溢，配上浓郁的芝士，根本停不下来！',
-                '夏威夷BBQ': '甜甜的菠萝配上BBQ酱，酸甜口感特别开胃，BBQ鸡肉也超入味，这个组合真的很特别！',
-                '派对怪兽': '32寸超巨型披萨！站点特色、加州小牛肉、意大利香肠、BBQ鸡肉四合一，10-15人份的超级怪兽！'
-            };
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: 'deepseek-ai/DeepSeek-V3',
+                    messages: [{
+                        role: 'system',
+                        content: '你是专业的小红书美食博主，擅长写爆款探店笔记'
+                    }, {
+                        role: 'user',
+                        content: `为站点披萨写一篇小红书笔记。
 
-            const pizzaDesc = pizzaDescriptions[pizza] || '料超级足，芝士拉丝能拉出一米长，每一口都有满满的惊喜！';
+门店：${store}
+产品：${pizza}披萨
+特点：${pizzaDesc}
 
-            const prompt = `请以小红书爆款文案风格，为站点披萨写一篇探店打卡文案。
+要求：
+1. 标题：15字内，吸引眼球，带emoji
+2. 正文：600-800字，分段清晰，多用emoji
+3. 风格：激动、惊喜、真实
+4. 重点：超大size、料足、性价比、环境酷
+5. 标签：#站点披萨 #北京美食 #披萨推荐 #探店打卡 #超大披萨 #美食分享
 
-【品牌信息】
-- 品牌：站点披萨 (Tube Station Pizza)
-- 创立：2000年，北京老牌美式披萨
-- 特色：超大size披萨（最大32寸），以"超级大的披萨在北京"闻名
-- 环境：美式工业风装修，朋克风格，适合拍照
-- 价格：人均80-130元，性价比超高
-- 适合：朋友聚会、生日派对、情侣约会
+格式要求（重要）：
+第一行：标题（仅标题，不要"标题："前缀）
+第二行：空行
+第三行开始：正文内容
+最后：标签（每个标签独立一行，以#开头）
 
-【本次体验】
-- 门店：${store}
-- 点餐：${pizza}披萨
-- 产品特点：${pizzaDesc}
+直接输出，不要任何说明。`
+                    }],
+                    temperature: 0.9,
+                    max_tokens: 2000
+                })
+            });
 
-【文案要求】
-1. 标题要抓眼球，用emoji，要有冲击力（例如：🚨、😱、🔥）
-2. 开头要有强烈的代入感，像和闺蜜分享惊喜
-3. 重点突出：
-   - 披萨的超大size（视觉震撼）
-   - 料特别足（性价比）
-   - 薄饼底超酥脆
-   - 芝士拉丝的画面感
-   - 美式工业风环境很酷
-4. 语言风格：
-   - 年轻化、激动、充满惊叹
-   - 多用"太XXX了！"、"真的绝了"、"我慌了"等表达
-   - 适当使用小红书流行语
-5. 多用emoji（每段至少2-3个）
-6. 分段清晰，每段2-4行
-7. 结尾要有互动感，引导打卡
-8. 必须包含这些话题标签：#站点披萨 #北京美食 #披萨推荐 #探店打卡 #超大披萨 #美食分享
-9. 字数：600-800字
-
-请直接输出文案，不要任何说明或前缀。`;
-
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${API_KEY}`
-                    },
-                    body: JSON.stringify({
-                        model: 'deepseek-ai/DeepSeek-V3',
-                        messages: [
-                            {
-                                role: 'system',
-                                content: '你是一个专业的小红书美食博主，擅长写爆款探店文案。你的文案风格真实、热情、有感染力，善于用生动的语言描述美食，让读者产生强烈的代入感和食欲。'
-                            },
-                            {
-                                role: 'user',
-                                content: prompt
-                            }
-                        ],
-                        temperature: 0.9,
-                        max_tokens: 2000
-                    })
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(`API请求失败: ${response.status} - ${errorData.error?.message || '未知错误'}`);
-                }
-
-                const data = await response.json();
-                return data.choices[0].message.content;
-            } catch (error) {
-                if (error.message.includes('fetch')) {
-                    throw new Error('网络请求失败 - 请确保已部署到Web服务器');
-                }
-                throw error;
-            }
+            if (!response.ok) throw new Error('文案生成失败');
+            const data = await response.json();
+            return data.choices[0].message.content;
         }
 
         async function generateImage() {
-            const imagePrompts = {
-                '垃圾桶': 'giant american pizza loaded with multiple toppings, salami, beef, bacon, mushrooms, olives, melted mozzarella cheese, on wooden table, professional food photography, warm restaurant lighting, appetizing, ultra detailed, high quality',
-                '加州小牛肉': 'delicious american pizza with abundant beef topping, black pepper seasoning, melted cheese, close-up shot, professional food photography, warm lighting, appetizing, high quality',
-                '绞肉机': 'meat lovers pizza with multiple meat toppings, beef, sausage, bacon, ham, melted cheese, professional food photography, appetizing, ultra detailed',
-                '夏威夷BBQ': 'hawaiian BBQ pizza with pineapple, BBQ chicken, melted cheese, colorful toppings, professional food photography, bright lighting, appetizing',
-                '派对怪兽': 'extra large 32 inch american pizza, multiple sections with different toppings, party size pizza, overhead view, professional food photography, restaurant setting'
+            const prompts = {
+                '垃圾桶': 'giant american pizza loaded with toppings, salami, beef, bacon, mushrooms, olives, melted cheese, professional food photography, warm lighting',
+                '加州小牛肉': 'american pizza with abundant beef, black pepper, melted cheese, close-up, professional food photography',
+                '绞肉机': 'meat lovers pizza, multiple meat toppings, melted cheese, professional photography',
+                '夏威夷BBQ': 'hawaiian BBQ pizza with pineapple, BBQ chicken, melted cheese, bright lighting',
+                '派对怪兽': 'extra large 32 inch pizza, party size, overhead view, professional photography'
             };
 
-            const basePrompt = imagePrompts[pizza] || 'delicious large american style pizza with melted cheese, various toppings, professional food photography, warm lighting, appetizing, high quality';
-            
-            const fullPrompt = `${basePrompt}, Tube Station Pizza restaurant, instagram food photography style, aesthetic, trending`;
-            
-            const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(fullPrompt)}?width=1024&height=1024&nologo=true&enhance=true&seed=${Date.now()}`;
+            const prompt = prompts[pizza] || 'delicious large american pizza, professional food photography';
+            const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt + ', Tube Station Pizza, instagram style, aesthetic')}?width=1080&height=1080&nologo=true&enhance=true&seed=${Date.now()}`;
             
             return new Promise((resolve, reject) => {
                 const img = new Image();
-                img.onload = () => resolve(imageUrl);
+                img.onload = () => resolve(url);
                 img.onerror = () => reject(new Error('图片生成失败'));
-                img.src = imageUrl;
-                
+                img.src = url;
                 setTimeout(() => reject(new Error('图片加载超时')), 15000);
             });
         }
 
-        function showResult(text, imageUrl) {
-            document.getElementById('loadingScreen').style.display = 'none';
-            const resultScreen = document.getElementById('resultScreen');
-            resultScreen.style.display = 'block';
+        function parseContent(content) {
+            const lines = content.split('\n').filter(line => line.trim());
             
-            document.getElementById('storeInfo').innerHTML = `📍 ${store} | 🍕 ${pizza}披萨`;
+            // 第一行是标题
+            generatedContent.title = lines[0].replace(/^#+\s*/, '').trim();
             
-            document.getElementById('imageContainer').innerHTML = `
-                <img src="${imageUrl}" alt="站点披萨 - ${pizza}" id="generatedImage">
-            `;
+            // 提取标签
+            const tags = [];
+            const textLines = [];
             
-            document.getElementById('textContent').textContent = text;
-            
-            window.generatedText = text;
-            window.generatedImage = imageUrl;
-        }
-
-        function showError(title, details) {
-            document.getElementById('loadingScreen').style.display = 'none';
-            const errorScreen = document.getElementById('errorScreen');
-            errorScreen.style.display = 'block';
-            
-            document.getElementById('errorText').textContent = title;
-            document.getElementById('errorDetails').textContent = details;
-        }
-
-        function copyText() {
-            if (!window.generatedText) {
-                alert('文案还未生成');
-                return;
-            }
-
-            navigator.clipboard.writeText(window.generatedText).then(() => {
-                const btn = event.target.closest('.btn-copy');
-                const originalHTML = btn.innerHTML;
-                btn.innerHTML = '✅ 已复制';
-                btn.style.background = 'linear-gradient(135deg, #4caf50 0%, #45a049 100%)';
-                
-                setTimeout(() => {
-                    btn.innerHTML = originalHTML;
-                    btn.style.background = 'linear-gradient(135deg, #ffc107 0%, #ff9800 100%)';
-                }, 2000);
-
-                showToast('✅ 文案已复制到剪贴板');
-            }).catch(() => {
-                alert('❌ 复制失败，请手动复制文案');
-            });
-        }
-
-        function downloadImage() {
-            showToast('💡 请长按图片保存到相册');
-        }
-
-        function openXHS() {
-            if (!window.generatedText) {
-                alert('请先复制文案');
-                return;
-            }
-
-            const xhsUrl = 'xhslink://';
-            const xhsWebUrl = 'https://www.xiaohongshu.com';
-            
-            window.location.href = xhsUrl;
-            
-            setTimeout(() => {
-                if (confirm('📱 正在打开小红书APP...\n\n如果未自动跳转，点击"确定"访问网页版')) {
-                    window.open(xhsWebUrl, '_blank');
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (line.startsWith('#')) {
+                    tags.push(line);
+                } else if (line) {
+                    textLines.push(line);
                 }
-                
-                setTimeout(() => {
-                    alert('💡 发布指南：\n\n1. 在小红书点击底部"+"号\n2. 选择"笔记"\n3. 上传刚才保存的图片\n4. 粘贴已复制的文案\n5. 添加话题 #站点披萨\n6. 发布即可！\n\n🎁 发布后截图给店员有惊喜~');
-                }, 1000);
-            }, 800);
+            }
+            
+            generatedContent.text = textLines.join('\n\n');
+            generatedContent.tags = tags.length > 0 ? tags : ['#站点披萨', '#北京美食', '#披萨推荐', '#探店打卡', '#超大披萨', '#美食分享'];
+        }
+
+        function showPreview() {
+            // 隐藏加载，显示预览
+            document.getElementById('loadingOverlay').style.display = 'none';
+            
+            // 显示图片
+            document.getElementById('previewImage').src = generatedContent.image;
+            
+            // 显示标题
+            document.getElementById('noteTitle').textContent = generatedContent.title;
+            
+            // 显示内容
+            document.getElementById('noteContent').textContent = generatedContent.text;
+            
+            // 显示标签
+            const tagsContainer = document.getElementById('noteTags');
+            tagsContainer.innerHTML = generatedContent.tags
+                .map(tag => `<div class="tag">${tag}</div>`)
+                .join('');
+        }
+
+        async function copyToClipboard() {
+            const fullText = `${generatedContent.title}\n\n${generatedContent.text}\n\n${generatedContent.tags.join(' ')}`;
+            
+            try {
+                await navigator.clipboard.writeText(fullText);
+                console.log('文案已自动复制到剪贴板');
+            } catch (err) {
+                console.error('自动复制失败:', err);
+            }
+        }
+
+        function showPublishGuide() {
+            // 再次复制文案
+            copyToClipboard();
+            
+            // 显示指引
+            document.getElementById('guideOverlay').classList.add('show');
+        }
+
+        function goToXHS() {
+            document.getElementById('guideOverlay').classList.remove('show');
+            
+            // 尝试打开小红书APP
+            window.location.href = 'xhslink://';
+            
+            // 备选：打开网页版
+            setTimeout(() => {
+                window.open('https://www.xiaohongshu.com', '_blank');
+            }, 2000);
+            
+            showToast('✅ 文案已复制，请在小红书中粘贴发布');
+        }
+
+        function saveContent() {
+            copyToClipboard();
+            showToast('💾 内容已保存到剪贴板');
+        }
+
+        function showBackConfirm() {
+            document.getElementById('backModal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('backModal').classList.remove('show');
+        }
+
+        function goBack() {
+            window.history.back();
         }
 
         function showToast(message) {
-            const toast = document.createElement('div');
+            const toast = document.getElementById('successToast');
             toast.textContent = message;
-            toast.style.cssText = `
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                background: rgba(0, 0, 0, 0.85);
-                color: white;
-                padding: 1rem 2rem;
-                border-radius: 10px;
-                font-size: 1rem;
-                z-index: 9999;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            `;
-            document.body.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transition = 'opacity 0.3s ease';
-                setTimeout(() => document.body.removeChild(toast), 300);
-            }, 2000);
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
         }
 
-        function sleep(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
+        // 禁止右键保存（引导用户使用正确方式）
+        document.addEventListener('contextmenu', e => {
+            if (e.target.tagName === 'IMG') {
+                e.preventDefault();
+                showToast('💡 请使用"去小红书发布"按钮');
+            }
+        });
     </script>
 </body>
 </html>
