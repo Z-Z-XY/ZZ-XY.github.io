@@ -555,23 +555,28 @@
         }
 
         async function generateImage() {
-            const prompts = {
-                '垃圾桶': 'giant american pizza loaded with toppings, salami, beef, bacon, mushrooms, olives, melted cheese, professional food photography, warm lighting',
-                '加州小牛肉': 'american pizza with abundant beef, black pepper, melted cheese, close-up, professional food photography',
-                '绞肉机': 'meat lovers pizza, multiple meat toppings, melted cheese, professional photography',
-                '夏威夷BBQ': 'hawaiian BBQ pizza with pineapple, BBQ chicken, melted cheese, bright lighting',
-                '派对怪兽': 'extra large 32 inch pizza, party size, overhead view, professional photography'
+            // 预设的披萨图片（使用 Unsplash 免费图片）
+            const pizzaImages = {
+                '垃圾桶': 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=1080&h=1080&fit=crop&q=80',
+                '加州小牛肉': 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=1080&h=1080&fit=crop&q=80',
+                '绞肉机': 'https://images.unsplash.com/photo-1628840042765-356cda07504e?w=1080&h=1080&fit=crop&q=80',
+                '夏威夷BBQ': 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=1080&h=1080&fit=crop&q=80',
+                '派对怪兽': 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=1080&h=1080&fit=crop&q=80'
             };
 
-            const prompt = prompts[pizza] || 'delicious large american pizza, professional food photography';
-            const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt + ', Tube Station Pizza, instagram style, aesthetic')}?width=1080&height=1080&nologo=true&enhance=true&seed=${Date.now()}`;
+            // 默认图片
+            const defaultImage = 'https://images.unsplash.com/photo-1594007654729-407eedc4be65?w=1080&h=1080&fit=crop&q=80';
+            
+            const imageUrl = pizzaImages[pizza] || defaultImage;
             
             return new Promise((resolve, reject) => {
                 const img = new Image();
-                img.onload = () => resolve(url);
-                img.onerror = () => reject(new Error('图片生成失败'));
-                img.src = url;
-                setTimeout(() => reject(new Error('图片加载超时')), 15000);
+                img.onload = () => resolve(imageUrl);
+                img.onerror = () => resolve(defaultImage); // 加载失败用默认图
+                img.src = imageUrl;
+                
+                // 5秒超时，使用默认图
+                setTimeout(() => resolve(defaultImage), 5000);
             });
         }
 
